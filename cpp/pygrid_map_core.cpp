@@ -2,6 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind11/operators.h>
 
 #include "grid_map_core/grid_map_core.hpp"
 
@@ -19,10 +20,21 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .export_values();
 
   py::class_<BufferRegion> buffer_region(m, "BufferRegion");
+  py::enum_<BufferRegion::Quadrant>(buffer_region, "Quadrant", py::arithmetic())
+    .value("Undefined", BufferRegion::Quadrant::Undefined)
+    .value("TopLeft", BufferRegion::Quadrant::TopLeft)
+    .value("TopRight", BufferRegion::Quadrant::TopRight)
+    .value("BottomLeft", BufferRegion::Quadrant::BottomLeft)
+    .value("BottomRight", BufferRegion::Quadrant::BottomRight)// 
+    .export_values();
   buffer_region
     .def(py::init<Index, Size, BufferRegion::Quadrant>(),
          py::arg("startIndex"), py::arg("size"), py::arg("quadrant"))
     .def(py::init<>())
+    .def("clone", [](const BufferRegion& self) {
+      auto cloned = self;
+      return cloned;
+    })
     .def("getStartIndex", &BufferRegion::getStartIndex)
     .def("setStartIndex", &BufferRegion::setStartIndex,
           py::arg("startIndex"))
@@ -32,17 +44,14 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .def("getQuadrant", &BufferRegion::getQuadrant)
     .def("setQuadrant", &BufferRegion::setQuadrant,
          py::arg("type"));
-  py::enum_<BufferRegion::Quadrant>(buffer_region, "Quadrant", py::arithmetic())
-    .value("Undefined", BufferRegion::Quadrant::Undefined)
-    .value("TopLeft", BufferRegion::Quadrant::TopLeft)
-    .value("TopRight", BufferRegion::Quadrant::TopRight)
-    .value("BottomLeft", BufferRegion::Quadrant::BottomLeft)
-    .value("BottomRight", BufferRegion::Quadrant::BottomRight)// 
-    .export_values();
 
   py::class_<SubmapGeometry>(m, "SubmapGeometry")
     .def(py::init<const GridMap&, const Position&, const Length&, bool&>(),
          py::arg("gridMap"), py::arg("position"), py::arg("length"), py::arg("isSuccess"))
+    .def("clone", [](const SubmapGeometry& self) {
+      auto cloned = self;
+      return cloned;
+    })
     .def("getGridMap", &SubmapGeometry::getGridMap)
     .def("getLength", &SubmapGeometry::getLength)
     .def("getPosition", &SubmapGeometry::getPosition)
@@ -111,8 +120,6 @@ PYBIND11_MODULE(pygrid_map_core, m) {
        const bool success = self.getIndex(position, index);
        return std::make_tuple(success, index);
      })
-//     .def("getPosition", &GridMap::getPosition,
-//          py::arg("layer"), py::arg("position"))
     .def("isInside", &GridMap::isInside,
          py::arg("position"))
     .def("isValid", 
@@ -181,6 +188,91 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .def("convertToDefaultStartIndex", &GridMap::convertToDefaultStartIndex)
     .def("getClosestPositionInMap", &GridMap::getClosestPositionInMap,
          py::arg("position"));
+
+  #define DEFINE_GRID_MAP_ITERATOR_BASICS(NAME) \
+    .def(py::self != py::self) \
+    .def("getIndex", [](const NAME& self) { \
+       return *self; \
+    }) \
+    .def("increment", [](NAME& self) { \
+       return (++self); \
+    }) \
+    .def("isPastEnd", &NAME::isPastEnd) \
+
+  py::class_<CircleIterator>(m, "CircleIterator")
+    .def(py::init<const GridMap&, const Position&, double>(),
+         py::arg("gridMap"), py::arg("center"), py::arg("radius"))
+    DEFINE_GRID_MAP_ITERATOR_BASICS(CircleIterator);
+
+  py::class_<EllipseIterator>(m, "EllipseIterator")
+    .def(py::init<const GridMap&, const Position&, const Length&, double>(),
+         py::arg("gridMap"), py::arg("center"), py::arg("length"), py::arg("rotation"))
+    DEFINE_GRID_MAP_ITERATOR_BASICS(EllipseIterator)
+    .def("getSubmapSize", &EllipseIterator::getSubmapSize);
+
+  py::class_<GridMapIterator>(m, "GridMapIterator")
+    .def(py::init<const GridMap&>(),
+         py::arg("gridMap"))
+    DEFINE_GRID_MAP_ITERATOR_BASICS(GridMapIterator)
+    .def("clone", [](const GridMapIterator& self) {
+      auto cloned = self;
+      return cloned;
+    })
+    .def("getLinearIndex", &GridMapIterator::getLinearIndex)
+    .def("getUnwrappedIndex", &GridMapIterator::getUnwrappedIndex)
+    .def("end", &GridMapIterator::end);
+
+  py::class_<LineIterator>(m, "LineIterator")
+    .def(py::init<const GridMap&, const Position&, const Position>(),
+         py::arg("gridMap"), py::arg("start"), py::arg("end"))
+    .def(py::init<const GridMap&, const Index&, const Index>(),
+         py::arg("gridMap"), py::arg("start"), py::arg("end"))
+    DEFINE_GRID_MAP_ITERATOR_BASICS(LineIterator);
+
+  // TODO: add Polygon and PolygonIterator
+
+  py::class_<SlidingWindowIterator> sliding_window_iterator(m, "SlidingWindowIterator");
+  py::enum_<SlidingWindowIterator::EdgeHandling>(sliding_window_iterator, "EdgeHandling", py::arithmetic())
+    .value("INSIDE", SlidingWindowIterator::EdgeHandling::INSIDE)
+    .value("CROP", SlidingWindowIterator::EdgeHandling::CROP)
+    .value("EMPTY", SlidingWindowIterator::EdgeHandling::EMPTY)
+    .value("MEAN", SlidingWindowIterator::EdgeHandling::MEAN)
+    .export_values();
+  sliding_window_iterator
+    .def(py::init<const GridMap&, const std::string&, const SlidingWindowIterator::EdgeHandling&, size_t>(),
+         py::arg("gridMap"), py::arg("layer"), 
+         py::arg("edgeHandling")=SlidingWindowIterator::EdgeHandling::CROP, 
+         py::arg("windowSize")=3)
+    .def("clone", [](const SlidingWindowIterator& self) {
+      auto cloned = self;
+      return cloned;
+    })
+    .def("setWindowLength", &SlidingWindowIterator::setWindowLength,
+          py::arg("gridMap"), py::arg("windowLength"))
+    .def("increment", [](SlidingWindowIterator& self) { 
+       return (++self); 
+    }) 
+    .def("getData", &SlidingWindowIterator::getData);
+
+  py::class_<SpiralIterator>(m, "SpiralIterator")
+    .def(py::init<const GridMap&, const Eigen::Vector2d&, double>(),
+         py::arg("gridMap"), py::arg("center"), py::arg("radius"))
+    DEFINE_GRID_MAP_ITERATOR_BASICS(SpiralIterator);
+
+  py::class_<SubmapIterator>(m, "SubmapIterator")
+    .def(py::init<const SubmapGeometry&>(),
+         py::arg("submap"))
+    .def(py::init<const GridMap&, const BufferRegion&>(),
+         py::arg("gridMap"), py::arg("bufferRegion"))
+    .def(py::init<const GridMap&, const Index&, const Size&>(),
+         py::arg("gridMap"), py::arg("submapStartIndex"), py::arg("submapSize"))
+    DEFINE_GRID_MAP_ITERATOR_BASICS(SubmapIterator)
+    .def("clone", [](const SubmapIterator& self) {
+      auto cloned = self;
+      return cloned;
+    })
+    .def("getSubmapIndex", &SubmapIterator::getSubmapIndex)
+    .def("getSubmapSize", &SubmapIterator::getSubmapSize);
 }
 
 } // namespace python
