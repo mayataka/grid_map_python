@@ -143,12 +143,6 @@ PYBIND11_MODULE(pygrid_map_core, m) {
        auto submap = self.getSubmap(position, length, success);
        return std::make_tuple(success, submap);
      }, py::arg("position"), py::arg("length"))
-    .def("getSubmap", [](const GridMap& self, const Position& position, const Length& length, const Index& indexInSubmap) {
-       bool success = false;
-       auto indexInSubmapRet = indexInSubmap;
-       auto submap = self.getSubmap(position, length, indexInSubmapRet, success);
-       return std::make_tuple(success, indexInSubmapRet, submap);
-     }, py::arg("position"), py::arg("length"), py::arg("indexInSubmap"))
     .def("getTransformedMap", &GridMap::getTransformedMap,
          py::arg("transform"), py::arg("heightLayerName"), py::arg("newFrameId"), py::arg("sampleRatio")=0.0)
     .def("setPosition", &GridMap::setPosition,
