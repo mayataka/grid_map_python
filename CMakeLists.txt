@@ -1,8 +1,32 @@
 cmake_minimum_required(VERSION 3.11)
 project(grid_map_python CXX)
 
+set(CMAKE_CXX_STANDARD 11)
+
 include(FetchContent)
 include(ExternalProject)
+
+# # build costmap_2d, opencv, octomap, pcl
+# set(PCL_SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/pcl)
+# set(PCL_SUBBUILD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/pcl-build)
+# set(PCL_INSTALL_DIR ${PROJECT_SOURCE_DIR}/pcl-install)
+# FetchContent_GetProperties(pcl)
+# if(NOT pcl_POPULATED)
+# FetchContent_Populate(
+#   pcl
+#   GIT_REPOSITORY https://github.com/PointCloudLibrary/pcl
+#   GIT_TAG        master
+#   SOURCE_DIR ${PCL_SOURCE_DIR}
+#   SUBBUILD_DIR ${PCL_SUBBUILD_DIR}
+# )
+# endif()
+# ExternalProject_Add(
+#   pcl
+#   SOURCE_DIR ${PCL_SOURCE_DIR}
+#   BUILD_IN_SOURCE TRUE
+#   INSTALL_DIR ${PCL_INSTALL_DIR}
+#   CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
+# )
 
 # build grid_map libraries
 set(GRID_MAP_SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/grid_map)
@@ -11,67 +35,41 @@ set(GRID_MAP_INSTALL_DIR ${PROJECT_SOURCE_DIR}/grid_map-install)
 FetchContent_GetProperties(grid_map)
 if(NOT grid_map_POPULATED)
 FetchContent_Populate(
-  pybind11
+  grid_map
   GIT_REPOSITORY https://github.com/ANYbotics/grid_map
   GIT_TAG        master
   SOURCE_DIR ${GRID_MAP_SOURCE_DIR}
   SUBBUILD_DIR ${GRID_MAP_SUBBUILD_DIR}
 )
 endif()
+macro(add_grid_map_external_project MODULE)
 ExternalProject_Add(
-  grid_map_core
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_core
+  ${MODULE}
+  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/${MODULE}
   BUILD_IN_SOURCE TRUE
   INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
 )
-ExternalProject_Add(
-  grid_map_costmap_2d
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_costmap_2d
-  BUILD_IN_SOURCE TRUE
-  INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
-)
-add_dependencies(grid_map_costmap_2d grid_map_core)
-ExternalProject_Add(
-  grid_map_cv
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_cv
-  BUILD_IN_SOURCE TRUE
-  INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
-)
-add_dependencies(grid_map_cv grid_map_core)
-ExternalProject_Add(
-  grid_map_filters
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_filters
-  BUILD_IN_SOURCE TRUE
-  INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
-)
-add_dependencies(grid_map_filters grid_map_core)
-ExternalProject_Add(
-  grid_map_octomap
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_octomap
-  BUILD_IN_SOURCE TRUE
-  INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
-)
-add_dependencies(grid_map_octomap grid_map_core)
-ExternalProject_Add(
-  grid_map_pcl
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_pcl
-  BUILD_IN_SOURCE TRUE
-  INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
-)
-add_dependencies(grid_map_pcl grid_map_core)
-ExternalProject_Add(
-  grid_map_sdf
-  SOURCE_DIR ${GRID_MAP_SOURCE_DIR}/grid_map_sdf
-  BUILD_IN_SOURCE TRUE
-  INSTALL_DIR ${GRID_MAP_INSTALL_DIR}
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCATKIN_ENABLE_TESTING=OFF
-)
+endmacro()
+
+add_grid_map_external_project(grid_map_core)
+
+# add_grid_map_external_project(grid_map_costmap_2d)
+# add_dependencies(grid_map_costmap_2d grid_map_core costmap_2d)
+
+# add_grid_map_external_project(grid_map_cv)
+# add_dependencies(grid_map_cv grid_map_core)
+
+# add_grid_map_external_project(grid_map_filters)
+# add_dependencies(grid_map_filters grid_map_core)
+
+# add_grid_map_external_project(grid_map_octomap)
+# add_dependencies(grid_map_octomap grid_map_core octomap)
+
+# add_grid_map_external_project(grid_map_pcl)
+# add_dependencies(grid_map_pcl grid_map_core pcl)
+
+add_grid_map_external_project(grid_map_sdf)
 add_dependencies(grid_map_sdf grid_map_core)
 
 # add pybind11
@@ -102,22 +100,34 @@ pybind11_add_module(
   SHARED 
   ${PROJECT_SOURCE_DIR}/cpp/py${MODULE}.cpp
 )
+add_dependencies(py${MODULE} ${MODULE})
+endmacro()
+
+macro(pybind11_grid_map_include_directories MODULE)
 target_include_directories(
   py${MODULE}
   PRIVATE
   ${GRID_MAP_INSTALL_DIR}/include
   ${EIGEN3_INCLUDE_DIRS}
 )
+endmacro()
+
+macro(pybind11_grid_map_link_libraries MODULE)
 target_link_libraries(
   py${MODULE}
   PRIVATE
   $<BUILD_INTERFACE:${GRID_MAP_INSTALL_DIR}/lib/lib${MODULE}.so>
   $<INSTALL_INTERFACE:${PYTHON_INSTALL_DIR}/grid_map/lib${MODULE}.so>
 )
-add_dependencies(py${MODULE} ${MODULE})
 endmacro()
 
 pybind11_add_grid_map_module(grid_map_core)
+pybind11_grid_map_include_directories(grid_map_core)
+pybind11_grid_map_link_libraries(grid_map_core)
+
+pybind11_add_grid_map_module(grid_map_sdf)
+pybind11_grid_map_include_directories(grid_map_sdf)
+pybind11_grid_map_link_libraries(grid_map_sdf)
 
 # Install files
 file(GLOB GRID_MAP_PYTHON_BINDINGS ${PROJECT_BINARY_DIR}/*.cpython*)

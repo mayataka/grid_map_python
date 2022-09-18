@@ -255,9 +255,10 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .def("getData", &SlidingWindowIterator::getData);
 
   py::class_<SpiralIterator>(m, "SpiralIterator")
-    .def(py::init<const GridMap&, const Eigen::Vector2d&, double>(),
+    .def(py::init<const GridMap&, Eigen::Vector2d, double>(),
          py::arg("gridMap"), py::arg("center"), py::arg("radius"))
-    DEFINE_GRID_MAP_ITERATOR_BASICS(SpiralIterator);
+    DEFINE_GRID_MAP_ITERATOR_BASICS(SpiralIterator)
+    .def("getCurrentRadius", &SpiralIterator::getCurrentRadius);
 
   py::class_<SubmapIterator>(m, "SubmapIterator")
     .def(py::init<const SubmapGeometry&>(),
@@ -273,6 +274,7 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     })
     .def("getSubmapIndex", &SubmapIterator::getSubmapIndex)
     .def("getSubmapSize", &SubmapIterator::getSubmapSize);
+
 }
 
 } // namespace python
