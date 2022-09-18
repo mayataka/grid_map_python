@@ -16,7 +16,18 @@ PYBIND11_MODULE(pygrid_map_core, m) {
          py::arg("gridMap"), py::arg("position"), py::arg("length"), py::arg("isSuccess"))
     .def("getGridMap", &SubmapGeometry::getGridMap)
     .def("getLength", &SubmapGeometry::getLength)
+    .def("getPosition", &SubmapGeometry::getPosition)
+    .def("getRequestedIndexInSubmap", &SubmapGeometry::getRequestedIndexInSubmap)
+    .def("getSize", &SubmapGeometry::getSize)
+    .def("getResolution", &SubmapGeometry::getResolution)
     .def("getStartIndex", &SubmapGeometry::getStartIndex);
+
+  py::class_<GridMap>(m, "GridMap")
+    .def(py::init<const std::vector<std::string>&>(),
+         py::arg("layers"))
+    .def(py::init<>())
+    .def("exists", &GridMap::exists,
+         py::arg("layer"));
 }
 
 } // namespace python
