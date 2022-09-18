@@ -26,8 +26,41 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .def(py::init<const std::vector<std::string>&>(),
          py::arg("layers"))
     .def(py::init<>())
+    .def("setGeometry", 
+          static_cast<void (GridMap::*)(const Length& length, const double, const Position&)>(&GridMap::setGeometry),
+          py::arg("length"), py::arg("resolution"), py::arg("position")=Position::Zero())
+    .def("setGeometry", 
+          static_cast<void (GridMap::*)(const SubmapGeometry&)>(&GridMap::setGeometry),
+          py::arg("geometry"))
+    .def("add", 
+          static_cast<void (GridMap::*)(const std::string&, const double)>(&GridMap::add),
+          py::arg("layer"), py::arg("value")=NAN)
+    .def("add", 
+          static_cast<void (GridMap::*)(const std::string&, const Matrix&)>(&GridMap::add),
+          py::arg("layer"), py::arg("data"))
     .def("exists", &GridMap::exists,
-         py::arg("layer"));
+         py::arg("layer"))
+    .def("get", 
+          static_cast<const Matrix& (GridMap::*)(const std::string&) const>(&GridMap::get),
+          py::arg("layer"))
+    .def("get", 
+          static_cast<Matrix& (GridMap::*)(const std::string&)>(&GridMap::get),
+          py::arg("layer"))
+    .def("__getitem__", [](const GridMap& self, const std::string& layer) {
+        return self[layer];
+      })
+    .def("__setitem__", [](GridMap& self, const std::string layer, const Matrix& item) {
+        self[layer] = item;
+      })
+    .def("erase", &GridMap::erase,
+         py::arg("layer"))
+    .def("getLayers", &GridMap::getLayers)
+    .def("setBasicLayers", &GridMap::setBasicLayers,
+         py::arg("basicLayers"))
+    .def("getBasicLayers", &GridMap::getBasicLayers)
+    .def("hasBasicLayers", &GridMap::hasBasicLayers)
+    .def("hasSameLayers", &GridMap::hasSameLayers,
+         py::arg("other"));
 }
 
 } // namespace python
