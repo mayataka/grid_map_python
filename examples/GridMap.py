@@ -85,9 +85,9 @@ def extendMapAligned():
     print(map1.isInside([3.0, 3.0]))
     print('length: ', map1.getLength())
     print('position: ', map1.getPosition())
-    print('atPosition("one", [2, 2]): ', map1.atPosition('one', np.array([2, 2])))
-    print('atPosition("one", [-2, -2]): ', map1.atPosition('one', np.array([-2, -2])))
-    print('atPosition("zero", [0, 0]): ', map1.atPosition('zero', np.array([0, 0])))
+    print('getValueAt("one", [2, 2]): ', map1.getValueAt(layer='one', index=np.array([2, 2])))
+    print('getValueAt("one", [-2, -2]): ', map1.getValueAt(layer='one', index=np.array([-2, -2])))
+    print('getValueAt("zero", [0, 0]): ', map1.getValueAt(layer='zero', index=np.array([0, 0])))
 
 
 clipToMap()

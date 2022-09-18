@@ -1,32 +1,13 @@
 cmake_minimum_required(VERSION 3.11)
 project(grid_map_python CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+
+find_package(Eigen3 REQUIRED)
+find_package(PCL REQUIRED QUIET COMPONENTS common features filters io segmentation surface)
 
 include(FetchContent)
 include(ExternalProject)
-
-# # build costmap_2d, opencv, octomap, pcl
-# set(PCL_SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/pcl)
-# set(PCL_SUBBUILD_DIR ${PROJECT_SOURCE_DIR}/thirdparty/pcl-build)
-# set(PCL_INSTALL_DIR ${PROJECT_SOURCE_DIR}/pcl-install)
-# FetchContent_GetProperties(pcl)
-# if(NOT pcl_POPULATED)
-# FetchContent_Populate(
-#   pcl
-#   GIT_REPOSITORY https://github.com/PointCloudLibrary/pcl
-#   GIT_TAG        master
-#   SOURCE_DIR ${PCL_SOURCE_DIR}
-#   SUBBUILD_DIR ${PCL_SUBBUILD_DIR}
-# )
-# endif()
-# ExternalProject_Add(
-#   pcl
-#   SOURCE_DIR ${PCL_SOURCE_DIR}
-#   BUILD_IN_SOURCE TRUE
-#   INSTALL_DIR ${PCL_INSTALL_DIR}
-#   CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_POSITION_INDEPENDENT_CODE=ON 
-# )
 
 # build grid_map libraries
 set(GRID_MAP_SOURCE_DIR ${PROJECT_SOURCE_DIR}/thirdparty/grid_map)
@@ -54,21 +35,6 @@ endmacro()
 
 add_grid_map_external_project(grid_map_core)
 
-# add_grid_map_external_project(grid_map_costmap_2d)
-# add_dependencies(grid_map_costmap_2d grid_map_core costmap_2d)
-
-# add_grid_map_external_project(grid_map_cv)
-# add_dependencies(grid_map_cv grid_map_core)
-
-# add_grid_map_external_project(grid_map_filters)
-# add_dependencies(grid_map_filters grid_map_core)
-
-# add_grid_map_external_project(grid_map_octomap)
-# add_dependencies(grid_map_octomap grid_map_core octomap)
-
-# add_grid_map_external_project(grid_map_pcl)
-# add_dependencies(grid_map_pcl grid_map_core pcl)
-
 add_grid_map_external_project(grid_map_sdf)
 add_dependencies(grid_map_sdf grid_map_core)
 
@@ -92,8 +58,6 @@ if(NOT DEFINED PYTHON_INSTALL_DIR)
   set(PYTHON_INSTALL_DIR $ENV{HOME}/.local/lib/python${GRID_MAP_PYTHON_VERSION}/site-packages/grid_map)
 endif()
 
-find_package(Eigen3 REQUIRED)
-
 macro(pybind11_add_grid_map_module MODULE)
 pybind11_add_module(
   py${MODULE}
@@ -109,6 +73,8 @@ target_include_directories(
   PRIVATE
   ${GRID_MAP_INSTALL_DIR}/include
   ${EIGEN3_INCLUDE_DIRS}
+  ${GRID_MAP_SOURCE_DIR}/grid_map_pcl/include 
+  ${PCL_INCLUDE_DIRS}
 )
 endmacro()
 
@@ -128,6 +94,21 @@ pybind11_grid_map_link_libraries(grid_map_core)
 pybind11_add_grid_map_module(grid_map_sdf)
 pybind11_grid_map_include_directories(grid_map_sdf)
 pybind11_grid_map_link_libraries(grid_map_sdf)
+
+pybind11_add_module(pygrid_map_pcl SHARED 
+  ${PROJECT_SOURCE_DIR}/cpp/pygrid_map_pcl.cpp
+  ${GRID_MAP_SOURCE_DIR}/grid_map_pcl/src/GridMapPclConverter.cpp
+)
+target_include_directories(pygrid_map_pcl PRIVATE
+  ${GRID_MAP_SOURCE_DIR}/grid_map_pcl/include 
+  ${GRID_MAP_SOURCE_DIR}/grid_map_core/include
+  ${PCL_INCLUDE_DIRS}
+)
+target_link_libraries(pygrid_map_pcl PRIVATE 
+  ${PCL_LIBRARIES} 
+  $<BUILD_INTERFACE:${GRID_MAP_INSTALL_DIR}/lib/libgrid_map_core.so>
+  $<INSTALL_INTERFACE:${PYTHON_INSTALL_DIR}/grid_map/libgrid_map_core.so>
+)
 
 # Install files
 file(GLOB GRID_MAP_PYTHON_BINDINGS ${PROJECT_BINARY_DIR}/*.cpython*)
