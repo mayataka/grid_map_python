@@ -3,8 +3,9 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 
-#include "grid_map_sdf/SignedDistanceField.hpp"
+#include "grid_map_sdf/SignedDistance2d.hpp"
 #include "grid_map_sdf/Gridmap3dLookup.hpp"
+#include "grid_map_sdf/SignedDistanceField.hpp"
 
 namespace grid_map {
 namespace signed_distance_field {
@@ -13,6 +14,15 @@ namespace python {
 namespace py = pybind11;
 
 PYBIND11_MODULE(pygrid_map_sdf, m) {
+  m.def("signedDistanceAtHeight", &signedDistanceAtHeight, 
+         py::arg("elevationMap"), py::arg("height"), py::arg("resolution"), 
+         py::arg("minHeight"), py::arg("maxHeight"));
+  m.def("signedDistanceAtHeightTranspose", &signedDistanceAtHeightTranspose, 
+         py::arg("elevationMap"), py::arg("sdfTranspose"), py::arg("tmp"), py::arg("tmpTranspose"),
+         py::arg("height"), py::arg("resolution"), py::arg("minHeight"), py::arg("maxHeight"));
+  m.def("signedDistanceFromOccupancy", &signedDistanceFromOccupancy, 
+         py::arg("occupancyGrid"), py::arg("resolution"));
+
   py::class_<Gridmap3dLookup> grid_map_3d_lookup(m, "Gridmap3dLookup");
   py::class_<Gridmap3dLookup::size_t_3d>(grid_map_3d_lookup, "size_t_3d")
     .def(py::init<size_t, size_t, size_t>(),
