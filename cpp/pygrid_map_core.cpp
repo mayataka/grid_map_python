@@ -90,10 +90,10 @@ PYBIND11_MODULE(pygrid_map_core, m) {
           py::arg("layer"))
     .def("__getitem__", [](const GridMap& self, const std::string& layer) {
         return self[layer];
-      })
+      }, py::arg("layer"))
     .def("__setitem__", [](GridMap& self, const std::string layer, const Matrix& item) {
         self[layer] = item;
-      })
+      }, py::arg("layer"), py::arg("item"))
     .def("erase", &GridMap::erase,
          py::arg("layer"))
     .def("getLayers", &GridMap::getLayers)
@@ -103,18 +103,18 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .def("hasBasicLayers", &GridMap::hasBasicLayers)
     .def("hasSameLayers", &GridMap::hasSameLayers,
          py::arg("other"))
-    .def("atPosition", 
-          static_cast<float& (GridMap::*)(const std::string&, const Position&)>(&GridMap::atPosition),
-          py::arg("layer"), py::arg("position"))
-    .def("atPosition", 
-          static_cast<float (GridMap::*)(const std::string&, const Position&, InterpolationMethods) const>(&GridMap::atPosition),
-          py::arg("layer"), py::arg("position"), py::arg("interpolationMethods")=InterpolationMethods::INTER_NEAREST)
-    .def("at", 
-          static_cast<float& (GridMap::*)(const std::string&, const Index&)>(&GridMap::at),
-          py::arg("layer"), py::arg("index"))
-    .def("at", 
-          static_cast<float (GridMap::*)(const std::string&, const Index&) const>(&GridMap::at),
-          py::arg("layer"), py::arg("index"))
+    .def("getValueAtPosition", [](const GridMap& self, const std::string& layer, const Position& position, InterpolationMethods interpolationMethods) {
+       return self.atPosition(layer, position, interpolationMethods);
+     }, py::arg("layer"), py::arg("position"), py::arg("interpolationMethods"))
+    .def("setValueAtPosition", [](GridMap& self, const std::string& layer, const Position& position, float value) {
+       self.atPosition(layer, position) = value;
+     }, py::arg("layer"), py::arg("position"), py::arg("value"))
+    .def("getValueAt", [](const GridMap& self, const std::string& layer, const Index& index) {
+       return self.at(layer, index);
+     }, py::arg("layer"), py::arg("index"))
+    .def("setValueAt", [](GridMap& self, const std::string& layer, const Index& index, float value) {
+       self.at(layer, index) = value;
+     }, py::arg("layer"), py::arg("index"), py::arg("value"))
     .def("getIndex", [](const GridMap& self, const Position& position) {
        Index index;
        const bool success = self.getIndex(position, index);
