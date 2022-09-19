@@ -105,7 +105,7 @@ PYBIND11_MODULE(pygrid_map_core, m) {
          py::arg("other"))
     .def("getValueAtPosition", [](const GridMap& self, const std::string& layer, const Position& position, InterpolationMethods interpolationMethods) {
        return self.atPosition(layer, position, interpolationMethods);
-     }, py::arg("layer"), py::arg("position"), py::arg("interpolationMethods"))
+     }, py::arg("layer"), py::arg("position"), py::arg("interpolationMethods")=InterpolationMethods::INTER_NEAREST)
     .def("setValueAtPosition", [](GridMap& self, const std::string& layer, const Position& position, float value) {
        self.atPosition(layer, position) = value;
      }, py::arg("layer"), py::arg("position"), py::arg("value"))
@@ -133,6 +133,11 @@ PYBIND11_MODULE(pygrid_map_core, m) {
        const bool success = self.getPosition3(layer, index, position);
        return std::make_tuple(success, position);
      }, py::arg("layer"), py::arg("index"))
+    .def("getPosition", [](const GridMap& self, const Index& index) {
+       Position position;
+       const bool success = self.getPosition(index, position);
+       return std::make_tuple(success, position);
+     }, py::arg("index"))
     .def("getVector", [](const GridMap& self, const std::string& layerPrefix, const Index& index) {
        Eigen::Vector3d vector;
        const bool success = self.getVector(layerPrefix, index, vector);
@@ -246,6 +251,7 @@ PYBIND11_MODULE(pygrid_map_core, m) {
     .def("increment", [](SlidingWindowIterator& self) { 
        return (++self); 
     }) 
+    .def("isPastEnd", &SlidingWindowIterator::isPastEnd) 
     .def("getData", &SlidingWindowIterator::getData);
 
   py::class_<SpiralIterator>(m, "SpiralIterator")

@@ -22,8 +22,11 @@ PYBIND11_MODULE(pygrid_map_sdf, m) {
           py::arg("position"))
     .def("getInterpolatedDistanceAt", &SignedDistanceField::getInterpolatedDistanceAt, 
           py::arg("position"))
-    .def("convertToPointCloud", &SignedDistanceField::convertToPointCloud, 
-          py::arg("points"));
+    .def("convertToPointCloud", [](const SignedDistanceField& self) {
+        pcl::PointCloud<pcl::PointXYZI> points;
+        self.convertToPointCloud(points);
+        return points;
+      });
 }
 
 } // namespace python
