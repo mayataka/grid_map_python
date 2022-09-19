@@ -21,9 +21,9 @@ PYBIND11_MODULE(pygrid_map_sdf, m) {
     .def("getDistanceGradientAt", &SignedDistanceField::getDistanceGradientAt, 
           py::arg("position"))
     .def("getInterpolatedDistanceAt", &SignedDistanceField::getInterpolatedDistanceAt, 
-          py::arg("position"));
-//     .def("convertToPointCloud", &SignedDistanceField::convertToPointCloud, 
-//           py::arg("points"));
+          py::arg("position"))
+    .def("convertToPointCloud", &SignedDistanceField::convertToPointCloud, 
+          py::arg("points"));
 }
 
 } // namespace python

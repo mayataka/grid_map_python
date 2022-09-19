@@ -138,6 +138,16 @@ pybind11_add_grid_map_module(grid_map_sdf)
 pybind11_grid_map_include_directories(grid_map_sdf)
 pybind11_grid_map_link_libraries(grid_map_sdf)
 
+pybind11_add_module(pcl SHARED ${PROJECT_SOURCE_DIR}/cpp/pcl.cpp)
+target_include_directories(pcl PUBLIC
+  ${EIGEN3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  ${GRID_MAP_CORE_SOURCE_DIR}/include
+  ${GRID_MAP_PCL_SOURCE_DIR}/include
+  ${GRID_MAP_SDF_SOURCE_DIR}/include
+)
+target_link_libraries(pcl PRIVATE ${PCL_LIBRARIES})
+
 # Install files
 file(GLOB GRID_MAP_PYTHON_BINDINGS ${PROJECT_BINARY_DIR}/*.cpython*)
 file(GLOB GRID_MAP_SHARED_LIBS ${PROJECT_BINARY_DIR}/*.so)
