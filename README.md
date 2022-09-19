@@ -2,6 +2,9 @@
 
 A Python wrapper of [grid_map](https://github.com/ANYbotics/grid_map) to run it without C++ or ROS.
 
+## Requirements
+- pcl
+
 ## Build and install 
 ```
 mkdir build
